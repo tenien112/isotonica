@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Isotónica · Migración de Access y Excel a aplicaciones web · Cartagena</title>
+<meta name="description" content="Convierto bases de datos Access y hojas Excel en aplicaciones web para pymes de Cartagena y la Región de Murcia. Revisión inicial gratis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mar:#123C69;        /* azul Arsenal */
+  --mar-2:#0B2A4A;
+  --agua:#CFEFEA;       /* agua isotonica */
+  --agua-2:#8FD3C9;
+  --sal:#FFFFFF;
+  --fondo:#F3F7F8;
+  --tinta:#1B2430;
+  --suave:#4A5868;
+  --gris98:#D4D0C8;     /* el gris de Windows/Access */
+  --grua:#F2B705;       /* amarillo grua del puerto */
+  --linea:#DCE4E8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --fondo:#0E1B27; --sal:#132433; --tinta:#E6EDF2; --suave:#A9B8C6;
+    --linea:#23394C; --agua:#1C4A4F; --mar:#8FC3F0; --mar-2:#0A1622;
+  }
+}
+:root[data-theme="dark"]{
+  --fondo:#0E1B27; --sal:#132433; --tinta:#E6EDF2; --suave:#A9B8C6;
+  --linea:#23394C; --agua:#1C4A4F; --mar:#8FC3F0; --mar-2:#0A1622;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px); scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important; animation:none!important} }
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0; background:var(--fondo); color:var(--tinta);
+  font:400 17px/1.6 "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif}
+img{max-width:100%}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--grua); outline-offset:3px; border-radius:4px}
+h1,h2,h3{font-family:"Bricolage Grotesque","Segoe UI",Arial,sans-serif; line-height:1.1; margin:0}
+.envoltura{max-width:1120px; margin:0 auto; padding:0 22px}
+
+/* Cabecera */
+header{position:sticky; top:env(safe-area-inset-top,0px); z-index:10; background:var(--fondo);
+  border-bottom:1px solid var(--linea)}
+.cab{display:flex; align-items:center; justify-content:space-between; gap:16px; height:64px}
+.marca{text-decoration:none; display:flex; align-items:baseline; gap:10px}
+.marca b{font-family:"Bricolage Grotesque",Arial,sans-serif; font-weight:800; font-size:24px; color:var(--mar); letter-spacing:-.02em}
+.marca span{font-size:14px; color:var(--suave)}
+nav{display:flex; gap:22px; font-size:15px}
+nav a{text-decoration:none; color:var(--suave)}
+nav a:hover{color:var(--tinta)}
+@media (max-width:760px){ nav{display:none} .marca span{display:none} }
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:0 22px;
+  border-radius:999px; font-weight:600; font-size:16px; text-decoration:none; border:2px solid transparent}
+.btn-grua{background:var(--grua); color:#1B2430}
+.btn-grua:hover{background:#FFC928}
+.btn-linea{border-color:var(--mar); color:var(--mar)}
+.btn-linea:hover{background:var(--agua)}
+.cab .btn{min-height:40px; padding:0 16px; font-size:15px}
+
+/* Hero */
+.hero{padding:56px 0 64px}
+.hero-rejilla{display:grid; grid-template-columns:1fr 1.05fr; gap:48px; align-items:center}
+@media (max-width:900px){ .hero-rejilla{grid-template-columns:1fr; gap:36px} }
+.hero h1{font-size:clamp(38px,5.6vw,64px); font-weight:800; letter-spacing:-.03em; color:var(--mar)}
+.hero p{font-size:19px; color:var(--suave); max-width:34em; margin:22px 0 28px}
+.acciones{display:flex; flex-wrap:wrap; gap:12px}
+.zona{margin-top:22px; font-size:15px; color:var(--suave)}
+
+/* Antes / despues */
+.comparador{position:relative}
+.pestanas{display:inline-flex; background:var(--sal); border:1px solid var(--linea); border-radius:999px; padding:4px; margin-bottom:14px}
+.pestanas button{font:600 15px "IBM Plex Sans",Arial,sans-serif; border:0; background:none; color:var(--suave);
+  padding:8px 20px; border-radius:999px; cursor:pointer}
+.pestanas button[aria-selected="true"]{background:var(--mar); color:#fff}
+:root[data-theme="dark"] .pestanas button[aria-selected="true"]{color:#0E1B27}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .pestanas button[aria-selected="true"]{color:#0E1B27} }
+.escena{min-height:360px}
+.escena > div{transition:opacity .35s ease}
+.oculto{display:none}
+
+/* Ventana estilo Access antiguo */
+.w98{background:var(--gris98); border:2px solid; border-color:#fff #404040 #404040 #fff; box-shadow:1px 1px 0 #000;
+  font:12px/1.3 Tahoma,"MS Sans Serif",Verdana,sans-serif; color:#000; max-width:520px}
+.w98-titulo{background:linear-gradient(90deg,#0A246A,#A6CAF0); color:#fff; font-weight:bold; padding:4px 6px;
+  display:flex; justify-content:space-between; align-items:center}
+.w98-botonera{display:flex; gap:2px}
+.w98-botonera i{display:inline-block; width:16px; height:14px; background:var(--gris98); border:1px solid; border-color:#fff #404040 #404040 #fff}
+.w98-cuerpo{padding:14px 14px 10px}
+.w98-fila{display:grid; grid-template-columns:120px 1fr; gap:8px; align-items:center; margin-bottom:7px}
+.w98-campo{background:#fff; border:2px solid; border-color:#808080 #fff #fff #808080; padding:3px 5px; min-height:22px; white-space:nowrap; overflow:hidden}
+.w98-nav{display:flex; align-items:center; gap:4px; border-top:1px solid #808080; padding:6px 8px; margin-top:6px}
+.w98-nav span{border:1px solid; border-color:#fff #404040 #404040 #fff; padding:0 6px}
+.w98-aviso{margin:10px 14px 14px; background:#FFFFE1; border:1px solid #000; padding:6px 8px}
+
+/* Version web moderna */
+.web{background:var(--sal); border:1px solid var(--linea); border-radius:16px; overflow:hidden; max-width:520px;
+  box-shadow:0 18px 40px -24px rgba(18,60,105,.45)}
+.web-barra{display:flex; align-items:center; gap:6px; padding:10px 14px; background:var(--fondo); border-bottom:1px solid var(--linea)}
+.web-barra i{width:10px; height:10px; border-radius:50%; background:var(--linea)}
+.web-url{margin-left:10px; font-size:12px; color:var(--suave); background:var(--sal); border:1px solid var(--linea);
+  border-radius:999px; padding:3px 12px; flex:1; overflow:hidden; white-space:nowrap}
+.web-cuerpo{padding:18px 20px 20px}
+.web-cabe{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px}
+.web-cabe h3{font-size:20px; color:var(--mar)}
+.estado{font-size:13px; font-weight:600; background:var(--agua); color:var(--tinta); padding:4px 10px; border-radius:999px; white-space:nowrap}
+.web-campos{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.web-campos label{font-size:12px; color:var(--suave); display:block; margin-bottom:3px}
+.web-campos div div{border:1px solid var(--linea); border-radius:8px; padding:8px 10px; font-size:14px; background:var(--fondo)}
+.ancho{grid-column:1 / -1}
+.web-pie{display:flex; justify-content:space-between; align-items:center; margin-top:16px; font-size:13px; color:var(--suave); gap:10px; flex-wrap:wrap}
+.guardado{display:inline-flex; align-items:center; gap:6px; color:#1F7A55; font-weight:600}
+:root[data-theme="dark"] .guardado{color:#7FDCB0}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .guardado{color:#7FDCB0} }
+.pie-nota{font-size:14px; color:var(--suave); margin-top:12px; max-width:520px}
+
+/* Secciones */
+section{padding:72px 0}
+.titulo{font-size:clamp(28px,3.6vw,40px); font-weight:700; letter-spacing:-.02em; color:var(--mar); max-width:22em}
+.entradilla{color:var(--suave); max-width:40em; margin:14px 0 0}
+.banda{background:var(--sal); border-top:1px solid var(--linea); border-bottom:1px solid var(--linea)}
+
+.problemas{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:0 40px; margin-top:34px}
+.problemas p{margin:0; padding:16px 0; border-top:1px solid var(--linea)}
+.problemas b{display:block; font-size:18px; margin-bottom:4px}
+
+.servicios{display:grid; grid-template-columns:1.1fr 1fr; gap:48px; margin-top:34px}
+@media (max-width:860px){ .servicios{grid-template-columns:1fr} }
+.servicios ul{list-style:none; margin:0; padding:0}
+.servicios li{padding:12px 0 12px 34px; border-bottom:1px solid var(--linea); position:relative}
+.servicios li::before{content:""; position:absolute; left:0; top:19px; width:18px; height:10px;
+  border-left:3px solid var(--agua-2); border-bottom:3px solid var(--agua-2); transform:rotate(-45deg)}
+.servicios li b{display:block}
+.recuadro{background:var(--mar); color:#fff; border-radius:20px; padding:30px}
+:root[data-theme="dark"] .recuadro{background:#173A5C}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .recuadro{background:#173A5C} }
+.recuadro h3{font-size:24px; margin-bottom:10px}
+.recuadro p{margin:0 0 12px; color:#DDE8F2}
+
+/* Pasos (secuencia real) */
+.pasos{counter-reset:paso; list-style:none; padding:0; margin:34px 0 0; display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:26px}
+.pasos li{counter-increment:paso; position:relative; padding-top:52px}
+.pasos li::before{content:counter(paso); position:absolute; top:0; left:0; width:38px; height:38px; border-radius:50%;
+  background:var(--agua); color:var(--mar); font:800 18px/38px "Bricolage Grotesque",Arial,sans-serif; text-align:center}
+.pasos b{display:block; font-size:18px; margin-bottom:4px}
+.pasos p{margin:0; color:var(--suave); font-size:16px}
+
+/* Caso real */
+.caso{display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start; margin-top:34px}
+@media (max-width:860px){ .caso{grid-template-columns:1fr} }
+.cifras{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+.cifras div{background:var(--fondo); border:1px solid var(--linea); border-radius:14px; padding:18px}
+.cifras strong{display:block; font:800 30px "Bricolage Grotesque",Arial,sans-serif; color:var(--mar)}
+.cifras span{font-size:14px; color:var(--suave)}
+
+/* Precios */
+.precios{width:100%; border-collapse:collapse; margin-top:30px; font-size:16px}
+.precios th,.precios td{text-align:left; padding:16px 12px; border-bottom:1px solid var(--linea); vertical-align:top}
+.precios th{font-weight:600; width:38%}
+.precios td:last-child{font-family:"Bricolage Grotesque",Arial,sans-serif; font-weight:700; font-size:19px; white-space:nowrap; color:var(--mar)}
+.tabla-scroll{overflow-x:auto}
+.nota{font-size:14px; color:var(--suave); margin-top:12px}
+
+/* Contacto */
+.contacto{background:var(--mar-2); color:#fff}
+.contacto .titulo{color:#fff}
+.contacto .entradilla{color:#C9D8E6}
+.datos{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; margin-top:32px}
+.datos a{display:block; text-decoration:none; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14);
+  border-radius:16px; padding:20px}
+.datos a:hover{background:rgba(255,255,255,.13)}
+.datos small{display:block; color:#9FB6CC; font-size:14px}
+.datos strong{font-size:20px; word-break:break-word}
+footer{background:var(--mar-2); color:#9FB6CC; font-size:14px; padding:22px 0 30px; border-top:1px solid rgba(255,255,255,.1)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="envoltura cab">
+    <a class="marca" href="#inicio"><b>isotónica</b><span>Lorenzo Moreno, desarrollo web en Cartagena</span></a>
+    <nav aria-label="Secciones">
+      <a href="#que-hago">Qué hago</a>
+      <a href="#como">Cómo trabajo</a>
+      <a href="#caso">Un caso real</a>
+      <a href="#precios">Precios</a>
+    </nav>
+    <a class="btn btn-grua" href="#contacto">Contactar</a>
+  </div>
+</header>
+
+<main id="inicio">
+  <div class="envoltura hero">
+    <div class="hero-rejilla">
+      <div>
+        <h1>Su Access de siempre, convertido en una aplicación web.</h1>
+        <p>Desde cualquier ordenador de la oficina, sin perder datos ni la forma de trabajar.</p>
+        <div class="acciones">
+          <a class="btn btn-grua" href="tel:+34609807269">Llamar al 609 807 269</a>
+          <a class="btn btn-linea" href="https://wa.me/34609807269?text=Hola%20Lorenzo%2C%20quiero%20informaci%C3%B3n%20sobre%20migrar%20mi%20Access" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+        </div>
+        <p class="zona">Cartagena y Región de Murcia. Primera revisión gratis.</p>
+      </div>
+
+      <div class="comparador">
+        <div class="pestanas" role="tablist" aria-label="Comparar antes y después">
+          <button role="tab" id="tab-antes" aria-selected="true" aria-controls="panel-antes">Antes</button>
+          <button role="tab" id="tab-despues" aria-selected="false" aria-controls="panel-despues">Después</button>
+        </div>
+        <div class="escena">
+          <div id="panel-antes" role="tabpanel" aria-labelledby="tab-antes">
+            <div class="w98" aria-hidden="true">
+              <div class="w98-titulo"><span>Microsoft Access - [FICHA CLIENTES]</span><span class="w98-botonera"><i></i><i></i><i></i></span></div>
+              <div class="w98-cuerpo">
+                <div class="w98-fila"><span>Nº Expediente:</span><div class="w98-campo">2026-0412</div></div>
+                <div class="w98-fila"><span>Cliente:</span><div class="w98-campo">TALLERES MARTÍNEZ S.L.</div></div>
+                <div class="w98-fila"><span>Fecha alta:</span><div class="w98-campo">14/03/2026</div></div>
+                <div class="w98-fila"><span>Estado:</span><div class="w98-campo">PENDIENTE</div></div>
+                <div class="w98-fila"><span>Observaciones:</span><div class="w98-campo">Llamar el lunes...</div></div>
+              </div>
+              <div class="w98-nav"><span>|&lt;</span><span>&lt;</span> Registro: 412 de 9830 <span>&gt;</span><span>&gt;|</span></div>
+              <div class="w98-aviso">⚠ La base de datos está bloqueada por otro usuario (PC-RECEPCION).</div>
+            </div>
+            
+          </div>
+          <div id="panel-despues" role="tabpanel" aria-labelledby="tab-despues" class="oculto">
+            <div class="web" aria-hidden="true">
+              <div class="web-barra"><i></i><i></i><i></i><span class="web-url">gestion.suempresa.local/expediente/2026-0412</span></div>
+              <div class="web-cuerpo">
+                <div class="web-cabe"><h3>Expediente 2026-0412</h3><span class="estado">Pendiente</span></div>
+                <div class="web-campos">
+                  <div class="ancho"><label>Cliente</label><div>Talleres Martínez S.L.</div></div>
+                  <div><label>Fecha de alta</label><div>14/03/2026</div></div>
+                  <div><label>Responsable</label><div>Ana</div></div>
+                  <div class="ancho"><label>Observaciones</label><div>Llamar el lunes para confirmar el presupuesto.</div></div>
+                </div>
+                <div class="web-pie"><span class="guardado">✓ Guardado automáticamente</span><span>4 personas conectadas</span></div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="banda" aria-labelledby="t-suena">
+    <div class="envoltura">
+      <h2 class="titulo" id="t-suena">¿Le suena?</h2>
+      <div class="problemas">
+        <p><b>Solo funciona en un ordenador</b>Si ese PC falla, se para todo.</p>
+        <p><b>Se bloquea cuando entran dos</b>"Archivo en uso" y datos que no se guardan.</p>
+        <p><b>Da miedo tocarlo</b>Nadie sabe ya cómo cambiarlo.</p>
+        <p><b>El Excel no da más de sí</b>Versiones repetidas y ninguna fiable.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="que-hago" aria-labelledby="t-hago">
+    <div class="envoltura">
+      <h2 class="titulo" id="t-hago">Qué hago</h2>
+      
+      <div class="servicios">
+        <ul>
+          <li><b>Access a aplicación web</b></li>
+          <li><b>Excel compartido a aplicación</b></li>
+          <li><b>Usuarios y permisos</b></li>
+          <li><b>Informes en PDF</b></li>
+          <li><b>Copias y reparación automáticas</b></li>
+        </ul>
+        <div class="recuadro">
+          <h3>Sin parar su trabajo diario</h3>
+          <p>Se migra por partes mientras su equipo sigue con el programa antiguo. Los datos pueden quedarse en su oficina.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="como" class="banda" aria-labelledby="t-como">
+    <div class="envoltura">
+      <h2 class="titulo" id="t-como">Cómo trabajo</h2>
+      <ol class="pasos">
+        <li><b>Revisión gratuita</b><p>Voy a su oficina.</p></li>
+        <li><b>Presupuesto cerrado</b><p>Por escrito, sin sorpresas.</p></li>
+        <li><b>Migración por fases</b><p>Probado con sus datos reales.</p></li>
+        <li><b>Puesta en marcha</b><p>Y formación a su equipo.</p></li>
+        <li><b>Mantenimiento</b><p>Cambios y soporte.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="caso" aria-labelledby="t-caso">
+    <div class="envoltura">
+      <h2 class="titulo" id="t-caso">Un caso real</h2>
+      <div class="caso">
+        <div>
+          <p class="entradilla" style="margin-top:0">Access de un grupo técnico de la administración pública, migrado a web por fases. Ahora lo usa todo el equipo a la vez.</p>
+        </div>
+        <div class="cifras">
+          <div><strong>9.800+</strong><span>expedientes migrados</span></div>
+          <div><strong>36.000+</strong><span>registros en la tabla más grande</span></div>
+          <div><strong>30+</strong><span>formularios y pantallas replicados</span></div>
+          <div><strong>0 días</strong><span>de trabajo parado</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="precios" class="banda" aria-labelledby="t-precios">
+    <div class="envoltura">
+      <h2 class="titulo" id="t-precios">Precios orientativos</h2>
+      <p class="entradilla">Presupuesto cerrado tras la revisión gratuita.</p>
+      <div class="tabla-scroll">
+        <table class="precios">
+          <tbody>
+            <tr><th>Revisión inicial</th><td>Visita y estudio</td><td>Gratis</td></tr>
+            <tr><th>Migración pequeña</th><td>Hasta 10 formularios</td><td>desde 2.000 €</td></tr>
+            <tr><th>Migración mediana</th><td>Varios usuarios e informes</td><td>desde 5.000 €</td></tr>
+            <tr><th>Mantenimiento</th><td>Cambios y soporte</td><td>desde 100 €/mes</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="nota">Precios sin IVA.</p>
+    </div>
+  </section>
+
+  <section id="contacto" class="contacto" aria-labelledby="t-contacto">
+    <div class="envoltura">
+      <h2 class="titulo" id="t-contacto">Hablemos de su base de datos</h2>
+      <p class="entradilla">Le respondo en el día.</p>
+      <div class="datos">
+        <a href="tel:+34609807269"><small>Teléfono</small><strong>609 807 269</strong></a>
+        <a href="https://wa.me/34609807269?text=Hola%20Lorenzo%2C%20quiero%20informaci%C3%B3n%20sobre%20migrar%20mi%20Access" target="_blank" rel="noopener"><small>WhatsApp</small><strong>Escribir un mensaje</strong></a>
+        <a href="mailto:tenien112@gmail.com?subject=Migraci%C3%B3n%20de%20base%20de%20datos"><small>Correo</small><strong>tenien112@gmail.com</strong></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="envoltura">© 2026 Lorenzo Moreno Villalba. Cartagena, Región de Murcia.</div>
+</footer>
+
+<script>
+(function(){
+  var tabs = [document.getElementById("tab-antes"), document.getElementById("tab-despues")];
+  var panels = [document.getElementById("panel-antes"), document.getElementById("panel-despues")];
+  function mostrar(i){
+    tabs.forEach(function(t, j){
+      t.setAttribute("aria-selected", i === j ? "true" : "false");
+      t.tabIndex = i === j ? 0 : -1;
+      panels[j].classList.toggle("oculto", i !== j);
+    });
+  }
+  tabs.forEach(function(t, i){
+    t.addEventListener("click", function(){ mostrar(i); parar(); });
+    t.addEventListener("keydown", function(e){
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft"){ var n = 1 - i; mostrar(n); tabs[n].focus(); parar(); }
+    });
+  });
+  // Un unico momento animado: al cargar, pasa solo de "Antes" a "Despues" una vez.
+  var reducido = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var temporizador = reducido ? null : setTimeout(function(){ mostrar(1); }, 3500);
+  function parar(){ if (temporizador){ clearTimeout(temporizador); temporizador = null; } }
+})();
+</script>
+</body>
+</html>
