@@ -212,7 +212,7 @@ footer{background:var(--mar-2); color:#9FB6CC; font-size:14px; padding:22px 0 30
     <div class="hero-rejilla">
       <div>
         <h1>Su Access o Excel de siempre, convertido en una aplicación web.</h1>
-        <p>Un ordenador de su oficina hace de servidor y el resto de equipos se conectan a él desde el navegador. Sin perder datos ni la forma de trabajar.</p>
+        <p>Migramos tu base de datos Access o el Excel a una aplicación web.</p>
         <div class="acciones">
           <a class="btn btn-grua" href="tel:+34609807269">Llamar al 609 807 269</a>
           <a class="btn btn-linea" href="https://wa.me/34609807269?text=Hola%20Lorenzo%2C%20quiero%20informaci%C3%B3n%20sobre%20migrar%20mi%20Access" target="_blank" rel="noopener">Escribir por WhatsApp</a>
@@ -273,7 +273,7 @@ footer{background:var(--mar-2); color:#9FB6CC; font-size:14px; padding:22px 0 30
 
   <section class="banda" aria-labelledby="t-suena">
     <div class="envoltura">
-      <h2 class="titulo" id="t-suena">¿Le suena?</h2>
+      <h2 class="titulo" id="t-suena">Problemas de Access y Excel</h2>
       <div class="problemas">
         <p><b>Solo funciona en un ordenador</b>Si ese PC falla, se para todo.</p>
         <p><b>Se bloquea cuando entran dos</b>"Archivo en uso" y datos que no se guardan.</p>
@@ -289,10 +289,10 @@ footer{background:var(--mar-2); color:#9FB6CC; font-size:14px; padding:22px 0 30
       
       <div class="servicios">
         <ul>
-          <li><b>Access a aplicación web</b></li>
+          <li><b>Migro tu Access a una aplicación web</b></li>
           <li><b>Un servidor en su oficina, todos conectados a él</b></li>
-          <li><b>Excel compartido a aplicación</b></li>
-          <li><b>Usuarios y permisos</b></li>
+          <li><b>Tu Excel lo paso a una aplicación web</b></li>
+          <li><b>Gestión de usuarios y permisos</b></li>
           <li><b>Informes en PDF</b></li>
           <li><b>Copias y reparación automáticas</b></li>
         </ul>
@@ -386,10 +386,8 @@ footer{background:var(--mar-2); color:#9FB6CC; font-size:14px; padding:22px 0 30
       if (e.key === "ArrowRight" || e.key === "ArrowLeft"){ var n = 1 - i; mostrar(n); tabs[n].focus(); parar(); }
     });
   });
-  // Un unico momento animado: al cargar, pasa solo de "Antes" a "Despues" una vez.
-  var reducido = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var temporizador = reducido ? null : setTimeout(function(){ mostrar(1); }, 3500);
-  function parar(){ if (temporizador){ clearTimeout(temporizador); temporizador = null; } }
+  // Por defecto se queda en "Antes"; solo cambia al pulsar.
+  function parar(){}
 })();
 </script>
 </body>
